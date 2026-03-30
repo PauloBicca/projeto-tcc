@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Permissões necessárias -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <application
+        android:name=".FinanceiroApplication"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Financeiro">
+
+        <!-- Tela de PIN / Login -->
+        <activity
+            android:name=".activities.PinActivity"
+            android:exported="true"
+            android:windowSoftInputMode="stateVisible">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Tela de configuração de PIN -->
+        <activity
+            android:name=".activities.SetupPinActivity"
+            android:exported="false" />
+
+        <!-- Tela principal (Dashboard + navegação) -->
+        <activity
+            android:name=".activities.MainActivity"
+            android:exported="false" />
+
+        <!-- Adicionar / Editar transação -->
+        <activity
+            android:name=".activities.TransactionFormActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Histórico -->
+        <activity
+            android:name=".activities.HistoryActivity"
+            android:exported="false" />
+
+        <!-- Metas -->
+        <activity
+            android:name=".activities.GoalsActivity"
+            android:exported="false" />
+
+        <!-- Formulário de Meta -->
+        <activity
+            android:name=".activities.GoalFormActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Planejamento -->
+        <activity
+            android:name=".activities.PlanningActivity"
+            android:exported="false" />
+
+        <!-- Formulário de Planejamento -->
+        <activity
+            android:name=".activities.PlanningFormActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Configurações -->
+        <activity
+            android:name=".activities.SettingsActivity"
+            android:exported="false" />
+
+        <!-- Gráficos -->
+        <activity
+            android:name=".activities.ChartsActivity"
+            android:exported="false" />
+
+        <!-- Receiver para notificações e boot -->
+        <receiver
+            android:name=".receivers.AlarmReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="com.financeiro.ALARM_TRIGGER" />
+            </intent-filter>
+        </receiver>
+
+    </application>
+
+</manifest>

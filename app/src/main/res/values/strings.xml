@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Financeiro</string>
+    <string name="nav_dashboard">Dashboard</string>
+    <string name="nav_history">Histórico</string>
+    <string name="nav_goals">Metas</string>
+    <string name="nav_planning">Planejamento</string>
+    <string name="saldo_atual">Saldo Atual</string>
+    <string name="receitas">Receitas</string>
+    <string name="despesas">Despesas</string>
+    <string name="diferenca">Saldo do mês</string>
+    <string name="nova_transacao">Nova Transação</string>
+    <string name="salvar">Salvar</string>
+    <string name="cancelar">Cancelar</string>
+    <string name="excluir">Excluir</string>
+</resources>
