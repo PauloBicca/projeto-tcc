@@ -9,6 +9,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import androidx.core.content.ContextCompat;
+
 import com.financeiro.app.R;
 import com.financeiro.app.models.Transaction;
 import com.financeiro.app.utils.CategoryUtils;
@@ -65,10 +67,10 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
         // Valor com cor e sinal
         if (Transaction.TYPE_RECEITA.equals(t.getType())) {
             holder.tvAmount.setText("+ " + FormatUtils.formatCurrency(t.getAmount()));
-            holder.tvAmount.setTextColor(0xFF4CAF50); // Verde
+            holder.tvAmount.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.income_color));
         } else {
             holder.tvAmount.setText("- " + FormatUtils.formatCurrency(t.getAmount()));
-            holder.tvAmount.setTextColor(0xFFF44336); // Vermelho
+            holder.tvAmount.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.expense_color));
         }
 
         holder.btnEdit.setOnClickListener(v -> listener.onEdit(t));

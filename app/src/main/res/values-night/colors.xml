@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Modo Escuro: sobrescreve apenas cores de fundo e texto -->
+    <color name="surface">#121212</color>
+    <color name="card_bg">#1E1E1E</color>
+    <color name="text_primary">#E0E0E0</color>
+    <color name="text_secondary">#9E9E9E</color>
+    <color name="gray">#757575</color>
+
+    <!-- Cores de receita/despesa levemente mais suaves no escuro -->
+    <color name="income_color">#81C784</color>
+    <color name="expense_color">#E57373</color>
+</resources>

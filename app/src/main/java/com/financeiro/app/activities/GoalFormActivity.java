@@ -15,12 +15,17 @@ import androidx.appcompat.widget.Toolbar;
 import com.financeiro.app.R;
 import com.financeiro.app.database.AppDatabase;
 import com.financeiro.app.models.Goal;
+import com.financeiro.app.models.Transaction;
 import com.financeiro.app.utils.FormatUtils;
 
 import java.util.Calendar;
 
 /**
  * Formulário para criar e editar metas financeiras.
+ *
+ * Ao adicionar ou aumentar o valor guardado em uma meta, a diferença é
+ * debitada automaticamente do saldo como uma DESPESA (categoria "Poupança").
+ * Se o valor for reduzido, a diferença volta ao saldo como RECEITA.
  */
 public class GoalFormActivity extends AppCompatActivity {
 
@@ -33,12 +38,15 @@ public class GoalFormActivity extends AppCompatActivity {
     private long deadlineTimestamp = 0;
     private long editId = -1;
 
+    /** Valor guardado na meta antes da edição (para calcular o delta) */
+    private double previousCurrentAmount = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_goal_form);
 
-        db = AppDatabase.getInstance(this);
+        db     = AppDatabase.getInstance(this);
         editId = getIntent().getLongExtra(EXTRA_GOAL_ID, -1);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -78,16 +86,17 @@ public class GoalFormActivity extends AppCompatActivity {
         etCurrent.setText(String.valueOf(g.getCurrentAmount()));
         etDescription.setText(g.getDescription());
         deadlineTimestamp = g.getDeadline();
+        previousCurrentAmount = g.getCurrentAmount();
         if (deadlineTimestamp > 0) tvDeadline.setText(FormatUtils.formatDate(deadlineTimestamp));
     }
 
     private void saveMeta() {
-        String title = etTitle.getText().toString().trim();
-        String targetStr = etTarget.getText().toString().trim();
+        String title      = etTitle.getText().toString().trim();
+        String targetStr  = etTarget.getText().toString().trim();
         String currentStr = etCurrent.getText().toString().trim();
-        String desc = etDescription.getText().toString().trim();
+        String desc       = etDescription.getText().toString().trim();
 
-        if (TextUtils.isEmpty(title)) { etTitle.setError("Informe o título"); return; }
+        if (TextUtils.isEmpty(title))     { etTitle.setError("Informe o título"); return; }
         if (TextUtils.isEmpty(targetStr)) { etTarget.setError("Informe o valor alvo"); return; }
 
         double target, current = 0;
@@ -100,18 +109,59 @@ public class GoalFormActivity extends AppCompatActivity {
             catch (NumberFormatException e) { etCurrent.setError("Valor inválido"); return; }
         }
 
+        // Calcula diferença em relação ao valor anterior
+        double delta = current - previousCurrentAmount;
+
         Goal g = new Goal(title, target, desc, deadlineTimestamp);
         g.setCurrentAmount(current);
 
         if (editId != -1) {
             g.setId(editId);
             db.goalDao().update(g);
-            Toast.makeText(this, "Meta atualizada!", Toast.LENGTH_SHORT).show();
         } else {
             db.goalDao().insert(g);
-            Toast.makeText(this, "Meta criada!", Toast.LENGTH_SHORT).show();
         }
+
+        // Cria transação automática se houve mudança no valor guardado
+        if (Math.abs(delta) > 0.001) {
+            registrarTransacaoMeta(title, delta);
+        }
+
+        String msg = editId != -1 ? "Meta atualizada!" : "Meta criada!";
+        if (Math.abs(delta) > 0.001) {
+            msg += delta > 0
+                    ? "\n" + FormatUtils.formatCurrency(delta) + " debitados do saldo."
+                    : "\n" + FormatUtils.formatCurrency(Math.abs(delta)) + " devolvidos ao saldo.";
+        }
+        Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
         finish();
+    }
+
+    /**
+     * Registra a movimentação do valor da meta como transação real.
+     *
+     * @param goalTitle nome da meta
+     * @param delta     positivo = guardou dinheiro (DESPESA no saldo)
+     *                  negativo = retirou dinheiro (RECEITA no saldo)
+     */
+    private void registrarTransacaoMeta(String goalTitle, double delta) {
+        String type, descPrefix;
+        if (delta > 0) {
+            type       = Transaction.TYPE_DESPESA;
+            descPrefix = "Guardado para meta: ";
+        } else {
+            type       = Transaction.TYPE_RECEITA;
+            descPrefix = "Retirado da meta: ";
+        }
+
+        Transaction t = new Transaction(
+                Math.abs(delta),
+                type,
+                "Poupança",
+                System.currentTimeMillis(),
+                descPrefix + goalTitle
+        );
+        db.transactionDao().insert(t);
     }
 
     @Override

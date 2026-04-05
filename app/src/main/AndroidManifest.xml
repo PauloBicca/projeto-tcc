@@ -81,6 +81,12 @@
             android:name=".activities.ChartsActivity"
             android:exported="false" />
 
+        <!-- Transações Fixas Mensais -->
+        <activity
+            android:name=".activities.FixedTransactionsActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
         <!-- Receiver para notificações e boot -->
         <receiver
             android:name=".receivers.AlarmReceiver"

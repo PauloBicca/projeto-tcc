@@ -14,4 +14,8 @@
     <color name="card_bg">#FFFFFF</color>
     <color name="text_primary">#212121</color>
     <color name="text_secondary">#757575</color>
+
+    <!-- Cores temáticas para receita/despesa (tem variante night) -->
+    <color name="income_color">#4CAF50</color>
+    <color name="expense_color">#F44336</color>
 </resources>

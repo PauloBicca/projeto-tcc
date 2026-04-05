@@ -13,6 +13,8 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import androidx.core.content.ContextCompat;
+
 import com.financeiro.app.R;
 import com.financeiro.app.activities.ChartsActivity;
 import com.financeiro.app.activities.SettingsActivity;
@@ -93,16 +95,16 @@ public class DashboardFragment extends Fragment implements TransactionAdapter.On
 
         // Cor da diferença
         if (diferenca >= 0) {
-            tvDiferenca.setTextColor(0xFF4CAF50);
+            tvDiferenca.setTextColor(ContextCompat.getColor(requireContext(), R.color.income_color));
         } else {
-            tvDiferenca.setTextColor(0xFFF44336);
+            tvDiferenca.setTextColor(ContextCompat.getColor(requireContext(), R.color.expense_color));
         }
 
         // Cor do saldo
         if (saldoTotal >= 0) {
-            tvSaldo.setTextColor(0xFF4CAF50);
+            tvSaldo.setTextColor(ContextCompat.getColor(requireContext(), R.color.income_color));
         } else {
-            tvSaldo.setTextColor(0xFFF44336);
+            tvSaldo.setTextColor(ContextCompat.getColor(requireContext(), R.color.expense_color));
         }
 
         // Últimas 5 transações

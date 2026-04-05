@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.financeiro.app.R;
+import com.financeiro.app.activities.FixedTransactionsActivity;
 import com.financeiro.app.adapters.ReminderAdapter;
 import com.financeiro.app.database.AppDatabase;
 import com.financeiro.app.models.Reminder;
@@ -36,6 +37,7 @@ public class SettingsActivity extends AppCompatActivity implements ReminderAdapt
 
     private Switch switchDarkMode;
     private Button btnChangePIN;
+    private Button btnFixedTransactions;
     private RecyclerView rvReminders;
     private FloatingActionButton fabAddReminder;
     private AppDatabase db;
@@ -57,10 +59,11 @@ public class SettingsActivity extends AppCompatActivity implements ReminderAdapt
             getSupportActionBar().setTitle("Configurações");
         }
 
-        switchDarkMode  = findViewById(R.id.switch_dark_mode);
-        btnChangePIN    = findViewById(R.id.btn_change_pin);
-        rvReminders     = findViewById(R.id.rv_reminders);
-        fabAddReminder  = findViewById(R.id.fab_add_reminder);
+        switchDarkMode       = findViewById(R.id.switch_dark_mode);
+        btnChangePIN         = findViewById(R.id.btn_change_pin);
+        btnFixedTransactions = findViewById(R.id.btn_fixed_transactions);
+        rvReminders          = findViewById(R.id.rv_reminders);
+        fabAddReminder       = findViewById(R.id.fab_add_reminder);
 
         // Tema
         SharedPreferences prefs = getSharedPreferences(PREFS_SETTINGS, MODE_PRIVATE);
@@ -72,6 +75,10 @@ public class SettingsActivity extends AppCompatActivity implements ReminderAdapt
                     checked ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO
             );
         });
+
+        // Fixos Mensais
+        btnFixedTransactions.setOnClickListener(v ->
+                startActivity(new Intent(this, FixedTransactionsActivity.class)));
 
         // Alterar PIN
         btnChangePIN.setOnClickListener(v -> {

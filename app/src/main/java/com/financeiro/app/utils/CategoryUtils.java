@@ -22,6 +22,7 @@ public class CategoryUtils {
             "Tecnologia",
             "Pets",
             "Presentes",
+            "Poupança",
             "Outros"
     };
 
@@ -53,6 +54,7 @@ public class CategoryUtils {
             case "Tecnologia":    return "💻";
             case "Pets":          return "🐾";
             case "Presentes":     return "🎁";
+            case "Poupança":      return "🏦";
             case "Salário":       return "💵";
             case "Freelance":     return "💼";
             case "Investimentos": return "📈";
@@ -78,6 +80,7 @@ public class CategoryUtils {
             case "Tecnologia":    return 0xFF607D8B;
             case "Pets":          return 0xFF8BC34A;
             case "Presentes":     return 0xFFF44336;
+            case "Poupança":      return 0xFF009688;
             case "Salário":       return 0xFF4CAF50;
             case "Freelance":     return 0xFF009688;
             case "Investimentos": return 0xFF2196F3;
