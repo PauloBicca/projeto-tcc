@@ -32,7 +32,7 @@ public class GoalFormActivity extends AppCompatActivity {
     public static final String EXTRA_GOAL_ID = "goal_id";
 
     private EditText etTitle, etTarget, etCurrent, etDescription;
-    private TextView tvDeadline;
+    private TextView tvDeadline, tvAvailableBalance;
     private Button btnSave;
     private AppDatabase db;
     private long deadlineTimestamp = 0;
@@ -56,15 +56,24 @@ public class GoalFormActivity extends AppCompatActivity {
             getSupportActionBar().setTitle(editId != -1 ? "Editar Meta" : "Nova Meta");
         }
 
-        etTitle       = findViewById(R.id.et_goal_title);
-        etTarget      = findViewById(R.id.et_goal_target);
-        etCurrent     = findViewById(R.id.et_goal_current);
-        etDescription = findViewById(R.id.et_goal_description);
-        tvDeadline    = findViewById(R.id.tv_goal_deadline);
-        btnSave       = findViewById(R.id.btn_save_goal);
+        etTitle            = findViewById(R.id.et_goal_title);
+        etTarget           = findViewById(R.id.et_goal_target);
+        etCurrent          = findViewById(R.id.et_goal_current);
+        etDescription      = findViewById(R.id.et_goal_description);
+        tvDeadline         = findViewById(R.id.tv_goal_deadline);
+        tvAvailableBalance = findViewById(R.id.tv_available_balance);
+        btnSave            = findViewById(R.id.btn_save_goal);
 
         tvDeadline.setOnClickListener(v -> showDatePicker());
         btnSave.setOnClickListener(v -> saveMeta());
+
+        // Exibe saldo disponível
+        double balance = db.transactionDao().getTotalBalance();
+        tvAvailableBalance.setText(FormatUtils.formatCurrency(balance));
+        if (balance < 0) {
+            tvAvailableBalance.setTextColor(
+                    androidx.core.content.ContextCompat.getColor(this, R.color.expense_color));
+        }
 
         if (editId != -1) loadGoal(editId);
     }
@@ -83,7 +92,7 @@ public class GoalFormActivity extends AppCompatActivity {
         if (g == null) return;
         etTitle.setText(g.getTitle());
         etTarget.setText(String.valueOf(g.getTargetAmount()));
-        etCurrent.setText(String.valueOf(g.getCurrentAmount()));
+        // etCurrent representa quanto adicionar agora; deixa em branco no modo edição
         etDescription.setText(g.getDescription());
         deadlineTimestamp = g.getDeadline();
         previousCurrentAmount = g.getCurrentAmount();
@@ -99,21 +108,31 @@ public class GoalFormActivity extends AppCompatActivity {
         if (TextUtils.isEmpty(title))     { etTitle.setError("Informe o título"); return; }
         if (TextUtils.isEmpty(targetStr)) { etTarget.setError("Informe o valor alvo"); return; }
 
-        double target, current = 0;
+        double target, delta = 0;
         try {
             target = Double.parseDouble(targetStr.replace(",", "."));
         } catch (NumberFormatException e) { etTarget.setError("Valor inválido"); return; }
 
         if (!TextUtils.isEmpty(currentStr)) {
-            try { current = Double.parseDouble(currentStr.replace(",", ".")); }
+            try { delta = Double.parseDouble(currentStr.replace(",", ".")); }
             catch (NumberFormatException e) { etCurrent.setError("Valor inválido"); return; }
+            if (delta < 0) { etCurrent.setError("Valor deve ser positivo"); return; }
         }
 
-        // Calcula diferença em relação ao valor anterior
-        double delta = current - previousCurrentAmount;
+        // Valida se há saldo suficiente para adicionar à meta
+        if (delta > 0.001) {
+            double balance = db.transactionDao().getTotalBalance();
+            if (delta > balance) {
+                etCurrent.setError("Saldo insuficiente. Disponível: " + FormatUtils.formatCurrency(balance));
+                return;
+            }
+        }
+
+        double newCurrentAmount = previousCurrentAmount + delta;
 
         Goal g = new Goal(title, target, desc, deadlineTimestamp);
-        g.setCurrentAmount(current);
+        g.setCurrentAmount(newCurrentAmount);
+        if (newCurrentAmount >= target) g.setStatus(Goal.STATUS_CONCLUIDA);
 
         if (editId != -1) {
             g.setId(editId);
@@ -122,16 +141,14 @@ public class GoalFormActivity extends AppCompatActivity {
             db.goalDao().insert(g);
         }
 
-        // Cria transação automática se houve mudança no valor guardado
-        if (Math.abs(delta) > 0.001) {
+        // Debita do saldo se o usuário guardou algum valor
+        if (delta > 0.001) {
             registrarTransacaoMeta(title, delta);
         }
 
         String msg = editId != -1 ? "Meta atualizada!" : "Meta criada!";
-        if (Math.abs(delta) > 0.001) {
-            msg += delta > 0
-                    ? "\n" + FormatUtils.formatCurrency(delta) + " debitados do saldo."
-                    : "\n" + FormatUtils.formatCurrency(Math.abs(delta)) + " devolvidos ao saldo.";
+        if (delta > 0.001) {
+            msg += "\n" + FormatUtils.formatCurrency(delta) + " debitados do saldo.";
         }
         Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
         finish();
