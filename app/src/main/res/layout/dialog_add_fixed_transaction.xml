@@ -78,7 +78,8 @@
             android:id="@+id/sp_fixed_category"
             android:layout_width="match_parent"
             android:layout_height="48dp"
-            android:background="@drawable/spinner_background"/>
+            android:background="@drawable/spinner_background"
+            android:popupBackground="@color/card_bg"/>
 
     </LinearLayout>
 </ScrollView>

@@ -62,6 +62,10 @@ public interface TransactionDao {
     @Query("SELECT * FROM transactions WHERE category = :category AND date BETWEEN :startDate AND :endDate ORDER BY date DESC")
     List<Transaction> getTransactionsByCategoryAndPeriod(String category, long startDate, long endDate);
 
+    /** Conta o total de despesas de um período */
+    @Query("SELECT COUNT(*) FROM transactions WHERE type = 'DESPESA' AND date BETWEEN :startDate AND :endDate")
+    int countDespesasByPeriod(long startDate, long endDate);
+
     /** Soma total de receitas de um período */
     @Query("SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE type = 'RECEITA' AND date BETWEEN :startDate AND :endDate")
     double getTotalReceitasByPeriod(long startDate, long endDate);

@@ -32,6 +32,7 @@
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:background="@drawable/spinner_background"
+            android:popupBackground="@color/card_bg"
             android:paddingStart="12dp"
             android:layout_marginBottom="16dp"/>
 

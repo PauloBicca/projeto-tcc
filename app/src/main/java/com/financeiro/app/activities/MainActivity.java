@@ -13,6 +13,7 @@ import com.financeiro.app.fragments.DashboardFragment;
 import com.financeiro.app.fragments.GoalsFragment;
 import com.financeiro.app.fragments.HistoryFragment;
 import com.financeiro.app.fragments.PlanningFragment;
+import com.financeiro.app.fragments.ReportFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationBarView;
@@ -52,6 +53,9 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             } else if (id == R.id.nav_planning) {
                 loadFragment(new PlanningFragment());
+                return true;
+            } else if (id == R.id.nav_report) {
+                loadFragment(new ReportFragment());
                 return true;
             }
             return false;
