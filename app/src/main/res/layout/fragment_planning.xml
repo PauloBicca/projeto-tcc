@@ -15,7 +15,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="📅 Planejamento Mensal"
+            android:text="Planejamento Mensal"
             android:textColor="@color/text_primary"
             android:textSize="22sp"
             android:textStyle="bold"
@@ -30,45 +30,107 @@
             android:textSize="13sp"
             android:layout_marginBottom="12dp"/>
 
-        <!-- Legenda de cores -->
-        <LinearLayout
+        <!-- Seletor Orçamentos / Parcelas -->
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tab_planning"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="12dp">
+            android:layout_height="40dp"
+            android:layout_marginBottom="12dp"
+            app:tabMode="fixed"
+            app:tabGravity="fill"
+            app:tabSelectedTextColor="@color/primary"
+            app:tabTextColor="@color/text_secondary"
+            app:tabIndicatorColor="@color/primary"
+            app:tabBackground="@color/card_bg"
+            app:tabRippleColor="@color/primary">
 
-            <View android:layout_width="12dp" android:layout_height="12dp"
-                android:background="#4CAF50" android:layout_margin="4dp"/>
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="OK  " android:textSize="11sp" android:textColor="@color/text_secondary"/>
+            <com.google.android.material.tabs.TabItem
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Orçamentos"/>
 
-            <View android:layout_width="12dp" android:layout_height="12dp"
-                android:background="#FF9800" android:layout_margin="4dp"/>
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="≥80%  " android:textSize="11sp" android:textColor="@color/text_secondary"/>
+            <com.google.android.material.tabs.TabItem
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Parcelas"/>
 
-            <View android:layout_width="12dp" android:layout_height="12dp"
-                android:background="#F44336" android:layout_margin="4dp"/>
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="Excedido" android:textSize="11sp" android:textColor="@color/text_secondary"/>
+        </com.google.android.material.tabs.TabLayout>
+
+        <!-- Seção Orçamentos -->
+        <LinearLayout
+            android:id="@+id/section_budgets"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <!-- Legenda de cores -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="12dp">
+
+                <View android:layout_width="12dp" android:layout_height="12dp"
+                    android:background="#4CAF50" android:layout_margin="4dp"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="OK  " android:textSize="11sp" android:textColor="@color/text_secondary"/>
+
+                <View android:layout_width="12dp" android:layout_height="12dp"
+                    android:background="#FF9800" android:layout_margin="4dp"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="≥80%  " android:textSize="11sp" android:textColor="@color/text_secondary"/>
+
+                <View android:layout_width="12dp" android:layout_height="12dp"
+                    android:background="#F44336" android:layout_margin="4dp"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="Excedido" android:textSize="11sp" android:textColor="@color/text_secondary"/>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tv_planning_empty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Nenhum orçamento definido.\nToque no + para criar limites por categoria!"
+                android:textColor="@color/text_secondary"
+                android:textSize="15sp"
+                android:gravity="center"
+                android:padding="32dp"
+                android:visibility="gone"/>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_budgets"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"/>
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/tv_planning_empty"
+        <!-- Seção Parcelas -->
+        <LinearLayout
+            android:id="@+id/section_installments"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Nenhum orçamento definido.\nToque no + para criar limites por categoria!"
-            android:textColor="@color/text_secondary"
-            android:textSize="15sp"
-            android:gravity="center"
-            android:padding="32dp"
-            android:visibility="gone"/>
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:visibility="gone">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rv_budgets"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"/>
+            <TextView
+                android:id="@+id/tv_installments_empty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Nenhuma compra parcelada registrada.\nToque no + para adicionar."
+                android:textColor="@color/text_secondary"
+                android:textSize="15sp"
+                android:gravity="center"
+                android:padding="32dp"
+                android:visibility="gone"/>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_installments"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"/>
+
+        </LinearLayout>
+
     </LinearLayout>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton

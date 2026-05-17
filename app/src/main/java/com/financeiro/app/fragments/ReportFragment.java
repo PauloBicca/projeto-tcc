@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -25,6 +26,7 @@ import com.financeiro.app.utils.FormatUtils;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.charts.PieChart;
+import com.github.mikephil.charting.components.Description;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
@@ -46,10 +48,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-/**
- * Fragment de Relatório: consolida gráficos, comparativo de economia,
- * metas atingidas e planejamento do mês para autoavaliação.
- */
 public class ReportFragment extends Fragment {
 
     private PieChart pieChart;
@@ -59,9 +57,14 @@ public class ReportFragment extends Fragment {
     private TextView tvReportMonth;
     private TextView tvBestMonth;
     private TextView tvVsPrevious;
+    private ImageButton btnPrevMonth;
+    private ImageButton btnNextMonth;
     private LinearLayout llGoalsContainer;
     private LinearLayout llBudgetContainer;
     private AppDatabase db;
+
+    /** Calendário apontando para o primeiro dia do mês selecionado. */
+    private Calendar selectedCal;
 
     @Nullable
     @Override
@@ -75,42 +78,101 @@ public class ReportFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         db = AppDatabase.getInstance(requireContext());
 
-        pieChart         = view.findViewById(R.id.pie_chart);
-        lineChart        = view.findViewById(R.id.line_chart);
-        barChart         = view.findViewById(R.id.bar_chart);
-        tvPieEmpty       = view.findViewById(R.id.tv_pie_empty);
-        tvReportMonth    = view.findViewById(R.id.tv_report_month);
-        tvBestMonth      = view.findViewById(R.id.tv_best_month);
-        tvVsPrevious     = view.findViewById(R.id.tv_vs_previous);
-        llGoalsContainer = view.findViewById(R.id.ll_goals_container);
+        pieChart          = view.findViewById(R.id.pie_chart);
+        lineChart         = view.findViewById(R.id.line_chart);
+        barChart          = view.findViewById(R.id.bar_chart);
+        tvPieEmpty        = view.findViewById(R.id.tv_pie_empty);
+        tvReportMonth     = view.findViewById(R.id.tv_report_month);
+        tvBestMonth       = view.findViewById(R.id.tv_best_month);
+        tvVsPrevious      = view.findViewById(R.id.tv_vs_previous);
+        btnPrevMonth      = view.findViewById(R.id.btn_prev_month);
+        btnNextMonth      = view.findViewById(R.id.btn_next_month);
+        llGoalsContainer  = view.findViewById(R.id.ll_goals_container);
         llBudgetContainer = view.findViewById(R.id.ll_budget_container);
 
-        tvReportMonth.setText(FormatUtils.formatMonthYear(System.currentTimeMillis()));
+        // Inicializa no mês atual
+        selectedCal = Calendar.getInstance();
+        selectedCal.set(Calendar.DAY_OF_MONTH, 1);
+        selectedCal.set(Calendar.HOUR_OF_DAY, 0);
+        selectedCal.set(Calendar.MINUTE, 0);
+        selectedCal.set(Calendar.SECOND, 0);
+        selectedCal.set(Calendar.MILLISECOND, 0);
 
-        setupPieChart();
-        setupComparativo();
-        loadGoals();
-        loadBudgets();
+        btnPrevMonth.setOnClickListener(v -> {
+            selectedCal.add(Calendar.MONTH, -1);
+            refreshAll();
+        });
+
+        btnNextMonth.setOnClickListener(v -> {
+            selectedCal.add(Calendar.MONTH, 1);
+            refreshAll();
+        });
+
+        refreshAll();
     }
 
     @Override
     public void onResume() {
         super.onResume();
+        if (selectedCal != null) refreshAll();
+    }
+
+    // =====================================================================
+    // Atualização geral
+    // =====================================================================
+
+    private void refreshAll() {
+        updateMonthHeader();
         setupPieChart();
         setupComparativo();
         loadGoals();
         loadBudgets();
     }
 
+    private void updateMonthHeader() {
+        tvReportMonth.setText(FormatUtils.formatMonthYear(selectedCal.getTimeInMillis()));
+
+        // Desabilita "próximo" se já estiver no mês atual
+        Calendar now = Calendar.getInstance();
+        boolean isCurrentMonth = selectedCal.get(Calendar.YEAR)  == now.get(Calendar.YEAR)
+                              && selectedCal.get(Calendar.MONTH) == now.get(Calendar.MONTH);
+        btnNextMonth.setEnabled(!isCurrentMonth);
+        btnNextMonth.setAlpha(isCurrentMonth ? 0.3f : 1f);
+    }
+
     // =====================================================================
-    // SEÇÃO 1 — Gasto Mensal por Categoria (Gráfico de Pizza)
+    // Helpers de período do mês selecionado
+    // =====================================================================
+
+    private long getStartOfSelectedMonth() {
+        Calendar c = (Calendar) selectedCal.clone();
+        c.set(Calendar.DAY_OF_MONTH, 1);
+        c.set(Calendar.HOUR_OF_DAY, 0);
+        c.set(Calendar.MINUTE, 0);
+        c.set(Calendar.SECOND, 0);
+        c.set(Calendar.MILLISECOND, 0);
+        return c.getTimeInMillis();
+    }
+
+    private long getEndOfSelectedMonth() {
+        Calendar c = (Calendar) selectedCal.clone();
+        c.set(Calendar.DAY_OF_MONTH, c.getActualMaximum(Calendar.DAY_OF_MONTH));
+        c.set(Calendar.HOUR_OF_DAY, 23);
+        c.set(Calendar.MINUTE, 59);
+        c.set(Calendar.SECOND, 59);
+        c.set(Calendar.MILLISECOND, 999);
+        return c.getTimeInMillis();
+    }
+
+    // =====================================================================
+    // SEÇÃO 1 — Gasto por Categoria (Gráfico de Pizza)
     // =====================================================================
 
     private void setupPieChart() {
         int textColor = ContextCompat.getColor(requireContext(), R.color.text_primary);
 
-        long start = FormatUtils.getStartOfCurrentMonth();
-        long end   = FormatUtils.getEndOfCurrentMonth();
+        long start = getStartOfSelectedMonth();
+        long end   = getEndOfSelectedMonth();
         List<Transaction> all = db.transactionDao().getTransactionsByPeriod(start, end);
 
         Map<String, Float> totals = new HashMap<>();
@@ -131,7 +193,7 @@ public class ReportFragment extends Fragment {
         tvPieEmpty.setVisibility(View.GONE);
 
         List<PieEntry> entries = new ArrayList<>();
-        List<Integer> colors  = new ArrayList<>();
+        List<Integer>  colors  = new ArrayList<>();
         for (Map.Entry<String, Float> e : totals.entrySet()) {
             entries.add(new PieEntry(e.getValue(), e.getKey()));
             colors.add(CategoryUtils.getCategoryColor(e.getKey()));
@@ -151,7 +213,9 @@ public class ReportFragment extends Fragment {
         pieChart.setHoleColor(Color.TRANSPARENT);
         pieChart.setHoleRadius(38f);
         pieChart.setTransparentCircleRadius(43f);
-        pieChart.setDescription(null);
+        Description pieDesc = new Description();
+        pieDesc.setEnabled(false);
+        pieChart.setDescription(pieDesc);
         pieChart.setCenterText("Gastos\ndo Mês");
         pieChart.setCenterTextSize(13f);
         pieChart.setCenterTextColor(textColor);
@@ -164,44 +228,67 @@ public class ReportFragment extends Fragment {
     }
 
     // =====================================================================
-    // SEÇÃO 2 — Comparativo com os Meses Anteriores
+    // SEÇÃO 2 — Comparativo dos 6 meses até o mês selecionado
     // =====================================================================
 
     private void setupComparativo() {
         int textColor  = ContextCompat.getColor(requireContext(), R.color.text_primary);
         int colorGreen = ContextCompat.getColor(requireContext(), R.color.income_color);
         int colorBlue  = 0xFF2196F3;
-        int colorGray  = ContextCompat.getColor(requireContext(), R.color.gray);
 
         SimpleDateFormat sdfMonth = new SimpleDateFormat("MMM", new Locale("pt", "BR"));
-        Calendar cal = Calendar.getInstance();
 
-        float[]  balances   = new float[6];
-        int[]    counts     = new int[6];
-        String[] labels     = new String[6];
-
-        List<Entry> lineEntries = new ArrayList<>();
+        // Coleta dados dos 6 meses terminando no mês selecionado
+        List<Float>  balanceList = new ArrayList<>();
+        List<Float>  despList    = new ArrayList<>();
+        List<String> labelList   = new ArrayList<>();
 
         for (int i = 5; i >= 0; i--) {
-            Calendar c = (Calendar) cal.clone();
+            Calendar c = (Calendar) selectedCal.clone();
             c.add(Calendar.MONTH, -i);
             c.set(Calendar.DAY_OF_MONTH, 1);
-            c.set(Calendar.HOUR_OF_DAY, 0);  c.set(Calendar.MINUTE, 0);  c.set(Calendar.SECOND, 0);
+            c.set(Calendar.HOUR_OF_DAY, 0);
+            c.set(Calendar.MINUTE, 0);
+            c.set(Calendar.SECOND, 0);
+            c.set(Calendar.MILLISECOND, 0);
             long start = c.getTimeInMillis();
             c.set(Calendar.DAY_OF_MONTH, c.getActualMaximum(Calendar.DAY_OF_MONTH));
-            c.set(Calendar.HOUR_OF_DAY, 23); c.set(Calendar.MINUTE, 59); c.set(Calendar.SECOND, 59);
+            c.set(Calendar.HOUR_OF_DAY, 23);
+            c.set(Calendar.MINUTE, 59);
+            c.set(Calendar.SECOND, 59);
+            c.set(Calendar.MILLISECOND, 999);
             long end = c.getTimeInMillis();
 
-            int idx = 5 - i;
             double rec  = db.transactionDao().getTotalReceitasByPeriod(start, end);
             double desp = db.transactionDao().getTotalDespesasByPeriod(start, end);
-            balances[idx] = (float) (rec - desp);
-            counts[idx]   = db.transactionDao().countDespesasByPeriod(start, end);
-            labels[idx]   = capitalize(sdfMonth.format(c.getTime()));
-            lineEntries.add(new Entry(idx, balances[idx]));
+
+            // Ignora meses sem nenhuma transação registrada
+            if (rec == 0 && desp == 0) continue;
+
+            balanceList.add((float) (rec - desp));
+            despList.add((float) desp);
+            labelList.add(capitalize(sdfMonth.format(c.getTime())));
         }
 
-        // --- LineChart (evolução de saldo) ---
+        int n = balanceList.size();
+
+        if (n == 0) {
+            lineChart.setVisibility(View.GONE);
+            barChart.setVisibility(View.GONE);
+            tvBestMonth.setText("Sem dados suficientes para exibir o comparativo.");
+            tvVsPrevious.setText("");
+            return;
+        }
+
+        lineChart.setVisibility(View.VISIBLE);
+        String[] labels = labelList.toArray(new String[0]);
+
+        // --- LineChart ---
+        List<Entry> lineEntries = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            lineEntries.add(new Entry(i, balanceList.get(i)));
+        }
+
         LineDataSet lineDataSet = new LineDataSet(lineEntries, "Saldo Mensal (R$)");
         lineDataSet.setColor(colorGreen);
         lineDataSet.setCircleColor(colorGreen);
@@ -220,31 +307,43 @@ public class ReportFragment extends Fragment {
         lineChart.animateX(900);
         lineChart.invalidate();
 
-        // --- Cálculo do score de economia ---
-        float maxBal = balances[0], minBal = balances[0];
-        int   maxCnt = counts[0],  minCnt = counts[0];
-        for (int i = 1; i < 6; i++) {
-            if (balances[i] > maxBal) maxBal = balances[i];
-            if (balances[i] < minBal) minBal = balances[i];
-            if (counts[i] > maxCnt)  maxCnt  = counts[i];
-            if (counts[i] < minCnt)  minCnt  = counts[i];
+        if (n < 2) {
+            barChart.setVisibility(View.GONE);
+            tvBestMonth.setText("Registre mais meses para ver o score de economia.");
+            tvVsPrevious.setText("");
+            return;
         }
 
-        float[] scores = new float[6];
+        barChart.setVisibility(View.VISIBLE);
+
+        // --- Score de economia ---
+        // Critério 1: maior saldo (receitas - despesas)
+        // Critério 2: menor valor total de despesas
+        float maxBal  = balanceList.get(0), minBal  = balanceList.get(0);
+        float maxDesp = despList.get(0),    minDesp = despList.get(0);
+        for (int i = 1; i < n; i++) {
+            if (balanceList.get(i) > maxBal)  maxBal  = balanceList.get(i);
+            if (balanceList.get(i) < minBal)  minBal  = balanceList.get(i);
+            if (despList.get(i)    > maxDesp) maxDesp = despList.get(i);
+            if (despList.get(i)    < minDesp) minDesp = despList.get(i);
+        }
+
+        float[] scores = new float[n];
         int bestIdx = 0;
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < n; i++) {
             float balScore = (maxBal == minBal) ? 100f
-                    : ((balances[i] - minBal) / (maxBal - minBal)) * 100f;
-            float cntScore = (maxCnt == minCnt) ? 100f
-                    : ((maxCnt - counts[i]) / (float) (maxCnt - minCnt)) * 100f;
-            scores[i] = (balScore + cntScore) / 2f;
+                    : ((balanceList.get(i) - minBal) / (maxBal - minBal)) * 100f;
+            // Mês com MENOS despesa recebe 100; com MAIS recebe 0
+            float despScore = (maxDesp == minDesp) ? 100f
+                    : ((maxDesp - despList.get(i)) / (maxDesp - minDesp)) * 100f;
+            scores[i] = (balScore + despScore) / 2f;
             if (scores[i] > scores[bestIdx]) bestIdx = i;
         }
 
-        // --- BarChart (score de economia) ---
+        // --- BarChart ---
         List<BarEntry> barEntries = new ArrayList<>();
         List<Integer>  barColors  = new ArrayList<>();
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < n; i++) {
             barEntries.add(new BarEntry(i, scores[i]));
             barColors.add(i == bestIdx ? colorGreen : colorBlue);
         }
@@ -269,38 +368,39 @@ public class ReportFragment extends Fragment {
         barChart.getAxisLeft().setAxisMaximum(100f);
         barChart.getAxisRight().setEnabled(false);
         barChart.getLegend().setTextColor(textColor);
-        barChart.setDescription(null);
-        barChart.getDescription().setEnabled(false);
+        Description barDesc = new Description();
+        barDesc.setEnabled(false);
+        barChart.setDescription(barDesc);
         barChart.animateY(900);
         barChart.invalidate();
 
-        // --- Resumo textual ---
-        tvBestMonth.setText("🏅 Mês mais econômico: " + labels[bestIdx]
+        tvBestMonth.setText("Mês mais econômico: " + labels[bestIdx]
                 + " (score " + Math.round(scores[bestIdx]) + "/100)");
 
-        // Comparação mês atual vs anterior (índices 5 e 4)
-        float currentScore  = scores[5];
-        float previousScore = scores[4];
-        if (previousScore == 0) {
-            tvVsPrevious.setText("📅 Sem dados suficientes para comparar com o mês anterior.");
+        // Comparação baseada no valor real de despesas entre o mês selecionado e o anterior
+        float despAtual    = despList.get(n - 1);
+        float despAnterior = despList.get(n - 2);
+
+        if (despAnterior == 0) {
+            tvVsPrevious.setText("Sem despesas no mês anterior para comparar.");
+            tvVsPrevious.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
         } else {
-            float diff = currentScore - previousScore;
-            if (diff > 5) {
+            float diffPercent = ((despAtual - despAnterior) / despAnterior) * 100f;
+            if (diffPercent < -1f) {
                 tvVsPrevious.setText(String.format(Locale.getDefault(),
-                        "📈 Você foi %.0f%% mais econômico que o mês anterior!", diff));
+                        "Você gastou %.0f%% a menos que o mês anterior.", Math.abs(diffPercent)));
                 tvVsPrevious.setTextColor(ContextCompat.getColor(requireContext(), R.color.income_color));
-            } else if (diff < -5) {
+            } else if (diffPercent > 1f) {
                 tvVsPrevious.setText(String.format(Locale.getDefault(),
-                        "📉 Você gastou %.0f%% mais que o mês anterior.", Math.abs(diff)));
+                        "Você gastou %.0f%% a mais que o mês anterior.", diffPercent));
                 tvVsPrevious.setTextColor(ContextCompat.getColor(requireContext(), R.color.expense_color));
             } else {
-                tvVsPrevious.setText("➡️ Desempenho similar ao mês anterior.");
+                tvVsPrevious.setText("Gastos similares ao mês anterior.");
                 tvVsPrevious.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
             }
         }
     }
 
-    /** Aplica estilos comuns (eixos, legenda) adaptados ao modo escuro. */
     private void applyChartStyling(LineChart chart, String[] labels, int textColor) {
         XAxis xAxis = chart.getXAxis();
         xAxis.setValueFormatter(new IndexAxisValueFormatter(labels));
@@ -312,7 +412,9 @@ public class ReportFragment extends Fragment {
         chart.getAxisLeft().setTextColor(textColor);
         chart.getAxisRight().setEnabled(false);
         chart.getLegend().setTextColor(textColor);
-        chart.setDescription(null);
+        Description lineDesc = new Description();
+        lineDesc.setEnabled(false);
+        chart.setDescription(lineDesc);
     }
 
     // =====================================================================
@@ -327,26 +429,21 @@ public class ReportFragment extends Fragment {
             addEmptyRow(llGoalsContainer, "Nenhuma meta concluída ainda.");
             return;
         }
-
-        for (Goal g : completed) {
-            addGoalRow(g);
-        }
+        for (Goal g : completed) addGoalRow(g);
     }
 
     private void addGoalRow(Goal g) {
         LinearLayout row = new LinearLayout(requireContext());
         row.setOrientation(LinearLayout.VERTICAL);
-        int padV = dp(8), padH = dp(4);
-        row.setPadding(padH, padV, padH, padV);
+        row.setPadding(dp(4), dp(8), dp(4), dp(8));
 
-        // Linha superior: título + valor
         LinearLayout top = new LinearLayout(requireContext());
         top.setOrientation(LinearLayout.HORIZONTAL);
 
         TextView tvTitle = new TextView(requireContext());
         tvTitle.setLayoutParams(new LinearLayout.LayoutParams(0,
                 LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
-        tvTitle.setText("🏆 " + g.getTitle());
+        tvTitle.setText(g.getTitle());
         tvTitle.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
         tvTitle.setTextSize(14f);
         tvTitle.setTypeface(null, Typeface.BOLD);
@@ -378,8 +475,9 @@ public class ReportFragment extends Fragment {
 
     private void loadBudgets() {
         llBudgetContainer.removeAllViews();
-        int month = FormatUtils.getCurrentMonth();
-        int year  = FormatUtils.getCurrentYear();
+
+        int month = selectedCal.get(Calendar.MONTH) + 1; // Calendar.MONTH é 0-based
+        int year  = selectedCal.get(Calendar.YEAR);
         List<Budget> budgets = db.budgetDao().getBudgetsByMonthYear(month, year);
 
         if (budgets.isEmpty()) {
@@ -387,10 +485,9 @@ public class ReportFragment extends Fragment {
             return;
         }
 
-        long start = FormatUtils.getStartOfCurrentMonth();
-        long end   = FormatUtils.getEndOfCurrentMonth();
+        long start = getStartOfSelectedMonth();
+        long end   = getEndOfSelectedMonth();
 
-        // Agrupa por status para exibição ordenada: OK → WARNING → OVER
         List<Budget> ok      = new ArrayList<>();
         List<Budget> warning = new ArrayList<>();
         List<Budget> over    = new ArrayList<>();
@@ -407,17 +504,16 @@ public class ReportFragment extends Fragment {
             }
         }
 
-        // Excedidos primeiro (mais urgente), depois atenção, depois OK
         if (!over.isEmpty()) {
-            addSectionLabel(llBudgetContainer, "❌ Limite Excedido", R.color.expense_color);
+            addSectionLabel(llBudgetContainer, "Limite Excedido", R.color.expense_color);
             for (Budget b : over)    addBudgetRow(b, spentMap.get(b.getId()), R.color.expense_color);
         }
         if (!warning.isEmpty()) {
-            addSectionLabel(llBudgetContainer, "⚠️ Próximo do Limite", R.color.orange);
+            addSectionLabel(llBudgetContainer, "Próximo do Limite", R.color.orange);
             for (Budget b : warning) addBudgetRow(b, spentMap.get(b.getId()), R.color.orange);
         }
         if (!ok.isEmpty()) {
-            addSectionLabel(llBudgetContainer, "✅ Dentro do Limite", R.color.income_color);
+            addSectionLabel(llBudgetContainer, "Dentro do Limite", R.color.income_color);
             for (Budget b : ok)      addBudgetRow(b, spentMap.get(b.getId()), R.color.income_color);
         }
     }
@@ -442,21 +538,18 @@ public class ReportFragment extends Fragment {
         row.setOrientation(LinearLayout.VERTICAL);
         row.setPadding(dp(4), dp(6), dp(4), dp(6));
 
-        // Linha 1: categoria + valores
         LinearLayout top = new LinearLayout(requireContext());
         top.setOrientation(LinearLayout.HORIZONTAL);
 
         TextView tvCat = new TextView(requireContext());
         tvCat.setLayoutParams(new LinearLayout.LayoutParams(0,
                 LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
-        tvCat.setText(CategoryUtils.getCategoryEmoji(b.getCategory()) + " " + b.getCategory());
+        tvCat.setText(b.getCategory());
         tvCat.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
         tvCat.setTextSize(13f);
 
         TextView tvValues = new TextView(requireContext());
-        String spentStr = FormatUtils.formatCurrency(spent);
-        String limitStr = FormatUtils.formatCurrency(b.getLimitAmount());
-        tvValues.setText(spentStr + " / " + limitStr);
+        tvValues.setText(FormatUtils.formatCurrency(spent) + " / " + FormatUtils.formatCurrency(b.getLimitAmount()));
         tvValues.setTextColor(ContextCompat.getColor(requireContext(), statusColorRes));
         tvValues.setTextSize(12f);
 
@@ -464,21 +557,18 @@ public class ReportFragment extends Fragment {
         top.addView(tvValues);
         row.addView(top);
 
-        // Linha 2: ProgressBar
         ProgressBar pb = new ProgressBar(requireContext(), null,
                 android.R.attr.progressBarStyleHorizontal);
         LinearLayout.LayoutParams pbLp = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, dp(6));
         pbLp.topMargin = dp(4);
         pb.setLayoutParams(pbLp);
-        int percent = b.getPercentUsed(spent);
         pb.setMax(100);
-        pb.setProgress(Math.min(percent, 100));
+        pb.setProgress(Math.min(b.getPercentUsed(spent), 100));
         pb.getProgressDrawable().setTint(
                 ContextCompat.getColor(requireContext(), statusColorRes));
         row.addView(pb);
 
-        // Linha 3: texto restante/excedido
         TextView tvRemaining = new TextView(requireContext());
         double remaining = b.getRemaining(spent);
         if (remaining >= 0) {

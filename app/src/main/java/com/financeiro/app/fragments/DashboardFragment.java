@@ -16,7 +16,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.core.content.ContextCompat;
 
 import com.financeiro.app.R;
-import com.financeiro.app.activities.ChartsActivity;
 import com.financeiro.app.activities.SettingsActivity;
 import com.financeiro.app.activities.TransactionFormActivity;
 import com.financeiro.app.adapters.TransactionAdapter;
@@ -25,8 +24,6 @@ import com.financeiro.app.models.Budget;
 import com.financeiro.app.models.Transaction;
 import com.financeiro.app.utils.FormatUtils;
 import com.financeiro.app.utils.NotificationUtils;
-import com.google.android.material.card.MaterialCardView;
-
 import java.util.List;
 
 /**
@@ -57,13 +54,6 @@ public class DashboardFragment extends Fragment implements TransactionAdapter.On
         rvRecent    = view.findViewById(R.id.rv_recent);
 
         rvRecent.setLayoutManager(new LinearLayoutManager(requireContext()));
-
-        // Botão gráficos
-        MaterialCardView cardCharts = view.findViewById(R.id.card_charts);
-        if (cardCharts != null) {
-            cardCharts.setOnClickListener(v ->
-                    startActivity(new Intent(requireContext(), ChartsActivity.class)));
-        }
 
         // Botão configurações
         view.findViewById(R.id.btn_settings).setOnClickListener(v ->
@@ -107,7 +97,7 @@ public class DashboardFragment extends Fragment implements TransactionAdapter.On
             tvSaldo.setTextColor(ContextCompat.getColor(requireContext(), R.color.expense_color));
         }
 
-        // Últimas 5 transações
+        // Últimas 5 transações do mês atual
         List<Transaction> recent = db.transactionDao().getTransactionsByPeriod(start, end);
         if (recent.size() > 5) recent = recent.subList(0, 5);
 

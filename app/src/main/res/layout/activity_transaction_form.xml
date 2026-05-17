@@ -64,6 +64,7 @@
 
             <!-- Valor -->
             <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_amount"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Valor (R$)"
@@ -117,7 +118,7 @@
                 android:layout_height="wrap_content"
                 android:hint="Descrição (opcional)"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_marginBottom="24dp">
+                android:layout_marginBottom="16dp">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_description"
@@ -126,6 +127,78 @@
                     android:inputType="text"
                     android:maxLines="3"/>
             </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Seção Parcelamento (visível só para Despesa) -->
+            <LinearLayout
+                android:id="@+id/section_installment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <CheckBox
+                    android:id="@+id/cb_installment"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Compra parcelada?"
+                    android:textColor="@color/text_primary"
+                    android:textSize="15sp"
+                    android:layout_marginBottom="8dp"/>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/til_installment_count"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Número de parcelas"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_marginBottom="8dp"
+                    android:visibility="gone">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_installment_count"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="number"/>
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Resumo do parcelamento -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_installment_summary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardCornerRadius="8dp"
+                    app:cardBackgroundColor="@color/card_bg"
+                    android:layout_marginBottom="8dp"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="12dp">
+
+                        <TextView
+                            android:id="@+id/tv_installment_summary"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/text_primary"
+                            android:textSize="13sp"/>
+
+                        <TextView
+                            android:id="@+id/tv_installment_last"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp"
+                            android:layout_marginTop="4dp"/>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="16dp"/>
 
             <!-- Botão Salvar -->
             <com.google.android.material.button.MaterialButton

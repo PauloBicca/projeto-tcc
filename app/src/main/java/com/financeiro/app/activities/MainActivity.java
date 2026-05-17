@@ -10,6 +10,7 @@ import androidx.fragment.app.Fragment;
 
 import com.financeiro.app.R;
 import com.financeiro.app.fragments.DashboardFragment;
+import com.financeiro.app.utils.InstallmentUtils;
 import com.financeiro.app.fragments.GoalsFragment;
 import com.financeiro.app.fragments.HistoryFragment;
 import com.financeiro.app.fragments.PlanningFragment;
@@ -34,6 +35,9 @@ public class MainActivity extends AppCompatActivity {
 
         bottomNav = findViewById(R.id.bottom_navigation);
         fabAdd    = findViewById(R.id.fab_add);
+
+        // Cobrar parcelas vencidas automaticamente ao abrir o app
+        InstallmentUtils.autoChargeDueInstallments(this);
 
         // Carregar fragment inicial (Dashboard)
         if (savedInstanceState == null) {

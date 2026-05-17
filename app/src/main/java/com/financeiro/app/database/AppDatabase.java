@@ -11,6 +11,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 import com.financeiro.app.models.Budget;
 import com.financeiro.app.models.FixedTransaction;
 import com.financeiro.app.models.Goal;
+import com.financeiro.app.models.Installment;
 import com.financeiro.app.models.Reminder;
 import com.financeiro.app.models.Transaction;
 
@@ -19,8 +20,8 @@ import com.financeiro.app.models.Transaction;
  * Singleton para garantir uma única instância em todo o app.
  */
 @Database(
-        entities = {Transaction.class, Goal.class, Budget.class, Reminder.class, FixedTransaction.class},
-        version = 2,
+        entities = {Transaction.class, Goal.class, Budget.class, Reminder.class, FixedTransaction.class, Installment.class},
+        version = 3,
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
@@ -34,6 +35,7 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract BudgetDao budgetDao();
     public abstract ReminderDao reminderDao();
     public abstract FixedTransactionDao fixedTransactionDao();
+    public abstract InstallmentDao installmentDao();
 
     // ======================== Migrações ========================
 
@@ -53,6 +55,24 @@ public abstract class AppDatabase extends RoomDatabase {
         }
     };
 
+    static final Migration MIGRATION_2_3 = new Migration(2, 3) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            database.execSQL(
+                "CREATE TABLE IF NOT EXISTS `installments` (" +
+                "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                "`title` TEXT, " +
+                "`category` TEXT, " +
+                "`installmentAmount` REAL NOT NULL DEFAULT 0, " +
+                "`totalInstallments` INTEGER NOT NULL DEFAULT 0, " +
+                "`paidInstallments` INTEGER NOT NULL DEFAULT 0, " +
+                "`startDate` INTEGER NOT NULL DEFAULT 0, " +
+                "`createdAt` INTEGER NOT NULL DEFAULT 0, " +
+                "`status` TEXT)"
+            );
+        }
+    };
+
     // ======================== Singleton ========================
 
     public static AppDatabase getInstance(Context context) {
@@ -64,7 +84,7 @@ public abstract class AppDatabase extends RoomDatabase {
                                     AppDatabase.class,
                                     DATABASE_NAME
                             )
-                            .addMigrations(MIGRATION_1_2)
+                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                             .fallbackToDestructiveMigration()
                             .allowMainThreadQueries()
                             .build();

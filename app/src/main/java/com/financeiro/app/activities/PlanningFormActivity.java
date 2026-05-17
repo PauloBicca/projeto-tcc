@@ -87,7 +87,7 @@ public class PlanningFormActivity extends AppCompatActivity {
 
         double limit;
         try {
-            limit = Double.parseDouble(limitStr.replace(",", "."));
+            limit = Double.parseDouble(limitStr.replace(".", "").replace(",", "."));
         } catch (NumberFormatException e) { etLimit.setError("Valor inválido"); return; }
 
         if (limit <= 0) { etLimit.setError("Limite deve ser maior que zero"); return; }

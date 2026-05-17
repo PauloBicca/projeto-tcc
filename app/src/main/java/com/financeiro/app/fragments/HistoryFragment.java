@@ -76,7 +76,7 @@ public class HistoryFragment extends Fragment implements TransactionAdapter.OnTr
         spinnerCategory.setAdapter(catAdapter);
 
         // Filtro de período
-        String[] periods = {"Este mês", "Mês passado", "Últimos 3 meses", "Este ano", "Tudo"};
+        String[] periods = {"Tudo", "Este mês", "Mês passado", "Últimos 3 meses", "Este ano"};
         ArrayAdapter<String> periodAdapter = new ArrayAdapter<>(requireContext(),
                 android.R.layout.simple_spinner_item, periods);
         periodAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -116,22 +116,35 @@ public class HistoryFragment extends Fragment implements TransactionAdapter.OnTr
         java.util.Calendar cal = java.util.Calendar.getInstance();
 
         switch (pos) {
-            case 0: // Este mês
+            case 1: // Este mês
                 return new long[]{FormatUtils.getStartOfCurrentMonth(), FormatUtils.getEndOfCurrentMonth()};
-            case 1: // Mês passado
+            case 2: // Mês passado
                 cal.add(java.util.Calendar.MONTH, -1);
                 cal.set(java.util.Calendar.DAY_OF_MONTH, 1);
-                cal.set(java.util.Calendar.HOUR_OF_DAY, 0); cal.set(java.util.Calendar.MINUTE, 0);
+                cal.set(java.util.Calendar.HOUR_OF_DAY, 0);
+                cal.set(java.util.Calendar.MINUTE, 0);
+                cal.set(java.util.Calendar.SECOND, 0);
+                cal.set(java.util.Calendar.MILLISECOND, 0);
                 long s = cal.getTimeInMillis();
                 cal.set(java.util.Calendar.DAY_OF_MONTH, cal.getActualMaximum(java.util.Calendar.DAY_OF_MONTH));
-                cal.set(java.util.Calendar.HOUR_OF_DAY, 23); cal.set(java.util.Calendar.MINUTE, 59);
+                cal.set(java.util.Calendar.HOUR_OF_DAY, 23);
+                cal.set(java.util.Calendar.MINUTE, 59);
+                cal.set(java.util.Calendar.SECOND, 59);
+                cal.set(java.util.Calendar.MILLISECOND, 999);
                 return new long[]{s, cal.getTimeInMillis()};
-            case 2: // Últimos 3 meses
+            case 3: // Últimos 3 meses
                 cal.add(java.util.Calendar.MONTH, -3);
+                cal.set(java.util.Calendar.HOUR_OF_DAY, 0);
+                cal.set(java.util.Calendar.MINUTE, 0);
+                cal.set(java.util.Calendar.SECOND, 0);
+                cal.set(java.util.Calendar.MILLISECOND, 0);
                 return new long[]{cal.getTimeInMillis(), System.currentTimeMillis()};
-            case 3: // Este ano
+            case 4: // Este ano
                 cal.set(java.util.Calendar.DAY_OF_YEAR, 1);
                 cal.set(java.util.Calendar.HOUR_OF_DAY, 0);
+                cal.set(java.util.Calendar.MINUTE, 0);
+                cal.set(java.util.Calendar.SECOND, 0);
+                cal.set(java.util.Calendar.MILLISECOND, 0);
                 return new long[]{cal.getTimeInMillis(), System.currentTimeMillis()};
             default: // Tudo
                 return new long[]{0, System.currentTimeMillis()};

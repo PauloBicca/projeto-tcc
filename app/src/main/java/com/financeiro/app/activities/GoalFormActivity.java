@@ -110,11 +110,11 @@ public class GoalFormActivity extends AppCompatActivity {
 
         double target, delta = 0;
         try {
-            target = Double.parseDouble(targetStr.replace(",", "."));
+            target = Double.parseDouble(targetStr.replace(".", "").replace(",", "."));
         } catch (NumberFormatException e) { etTarget.setError("Valor inválido"); return; }
 
         if (!TextUtils.isEmpty(currentStr)) {
-            try { delta = Double.parseDouble(currentStr.replace(",", ".")); }
+            try { delta = Double.parseDouble(currentStr.replace(".", "").replace(",", ".")); }
             catch (NumberFormatException e) { etCurrent.setError("Valor inválido"); return; }
             if (delta < 0) { etCurrent.setError("Valor deve ser positivo"); return; }
         }

@@ -19,6 +19,7 @@ import com.financeiro.app.activities.GoalFormActivity;
 import com.financeiro.app.adapters.GoalAdapter;
 import com.financeiro.app.database.AppDatabase;
 import com.financeiro.app.models.Goal;
+import com.financeiro.app.models.Transaction;
 import com.financeiro.app.utils.FormatUtils;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -103,10 +104,27 @@ public class GoalsFragment extends Fragment implements GoalAdapter.OnGoalListene
 
     @Override
     public void onDelete(Goal goal) {
+        String msg = "Deseja remover a meta \"" + goal.getTitle() + "\"?";
+        if (goal.getCurrentAmount() > 0.001 && !goal.isCompleted()) {
+            msg += "\n\n" + FormatUtils.formatCurrency(goal.getCurrentAmount())
+                    + " guardados serão devolvidos ao seu saldo.";
+        }
+
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Excluir meta?")
-                .setMessage("Deseja remover a meta \"" + goal.getTitle() + "\"?")
+                .setMessage(msg)
                 .setPositiveButton("Excluir", (d, w) -> {
+                    // Devolve ao saldo o valor guardado em metas ativas
+                    if (goal.getCurrentAmount() > 0.001 && !goal.isCompleted()) {
+                        Transaction reversal = new Transaction(
+                                goal.getCurrentAmount(),
+                                Transaction.TYPE_RECEITA,
+                                "Poupança",
+                                System.currentTimeMillis(),
+                                "Meta removida: " + goal.getTitle()
+                        );
+                        db.transactionDao().insert(reversal);
+                    }
                     db.goalDao().delete(goal);
                     loadGoals();
                 })

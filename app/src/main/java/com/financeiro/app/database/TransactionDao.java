@@ -41,6 +41,10 @@ public interface TransactionDao {
     @Query("SELECT * FROM transactions ORDER BY date DESC")
     List<Transaction> getAllTransactions();
 
+    /** Retorna as N transações mais recentes de qualquer período */
+    @Query("SELECT * FROM transactions ORDER BY date DESC LIMIT :limit")
+    List<Transaction> getRecentTransactions(int limit);
+
     /** Retorna transações de um período específico */
     @Query("SELECT * FROM transactions WHERE date BETWEEN :startDate AND :endDate ORDER BY date DESC")
     List<Transaction> getTransactionsByPeriod(long startDate, long endDate);
