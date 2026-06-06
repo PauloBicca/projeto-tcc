@@ -59,6 +59,10 @@ public class DashboardFragment extends Fragment implements TransactionAdapter.On
         view.findViewById(R.id.btn_settings).setOnClickListener(v ->
                 startActivity(new Intent(requireContext(), SettingsActivity.class)));
 
+        // Botão Dicas IA
+        view.findViewById(R.id.card_ai_tips).setOnClickListener(v ->
+                startActivity(new Intent(requireContext(), com.financeiro.app.activities.AiTipsActivity.class)));
+
         loadDashboard();
     }
 

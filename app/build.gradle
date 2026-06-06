@@ -2,6 +2,12 @@ plugins {
     id 'com.android.application'
 }
 
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localProperties.load(new FileInputStream(localPropertiesFile))
+}
+
 android {
     namespace 'com.financeiro.app'
     compileSdk 34
@@ -12,6 +18,11 @@ android {
         targetSdk 34
         versionCode 1
         versionName "1.0"
+        buildConfigField "String", "GROQ_API_KEY", "\"${localProperties.getProperty('groq.api.key', '')}\""
+    }
+
+    buildFeatures {
+        buildConfig true
     }
 
     buildTypes {
@@ -47,4 +58,7 @@ dependencies {
     // Lifecycle
     implementation 'androidx.lifecycle:lifecycle-viewmodel:2.7.0'
     implementation 'androidx.lifecycle:lifecycle-livedata:2.7.0'
+
+    // OkHttp (chamadas HTTP para a IA)
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
 }
