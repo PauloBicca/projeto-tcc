@@ -48,18 +48,23 @@ public class MainActivity extends AppCompatActivity {
             int id = item.getItemId();
             if (id == R.id.nav_dashboard) {
                 loadFragment(new DashboardFragment());
+                fabAdd.show();
                 return true;
             } else if (id == R.id.nav_history) {
                 loadFragment(new HistoryFragment());
+                fabAdd.hide();
                 return true;
             } else if (id == R.id.nav_goals) {
                 loadFragment(new GoalsFragment());
+                fabAdd.hide();
                 return true;
             } else if (id == R.id.nav_planning) {
                 loadFragment(new PlanningFragment());
+                fabAdd.hide();
                 return true;
             } else if (id == R.id.nav_report) {
                 loadFragment(new ReportFragment());
+                fabAdd.hide();
                 return true;
             }
             return false;
